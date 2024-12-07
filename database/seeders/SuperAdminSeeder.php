@@ -2,24 +2,20 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Hash;
 
 class SuperAdminSeeder extends Seeder
 {
     public function run()
     {
-        User::create([
-            'name' => 'Nader',
-            'email' => 'soy@nader.com',
-            'password' => Hash::make('tuContraseñaSegura')
-        ]);
+        User::firstOrCreate(
+            ['email' => 'soy@nader.com'],
+            [
+                'name' => 'Nader',
+                'password' => Hash::make('tuContraseñaSegura')
+            ]
+        );
     }
 }
-
-
-
-
-
