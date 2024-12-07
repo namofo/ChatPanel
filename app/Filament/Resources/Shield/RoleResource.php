@@ -17,7 +17,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
-use App\Models\Role;
 
 class RoleResource extends Resource implements HasShieldPermissions
 {
@@ -34,10 +33,6 @@ class RoleResource extends Resource implements HasShieldPermissions
             'delete_any',
         ];
     }
-
-    protected static ?string $model = Role::class;
-
-    protected static ?string $tenantOwnershipRelationshipName = 'team';
 
     public static function form(Form $form): Form
     {
@@ -134,7 +129,7 @@ class RoleResource extends Resource implements HasShieldPermissions
             'edit' => Pages\EditRole::route('/{record}/edit'),
         ];
     }
-    
+
     public static function getCluster(): ?string
     {
         return Utils::getResourceCluster() ?? static::$cluster;
