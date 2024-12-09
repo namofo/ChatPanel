@@ -77,7 +77,7 @@ class AdminPanelProvider extends PanelProvider
             ->tenantProfile(EditTeamProfile::class)     
             ->tenantRegistration(RegisterTeam::class)
             ->registration()
-            ->tenantMenu(fn() => Auth::check() && Auth::user()->hasRole('super_admin'))
+            //->tenantMenu(fn() => Auth::check() && Auth::user()->hasRole('super_admin'))
         
             ## PARA AGREGAR UN LINK AL MENU
             //->navigationItems([
