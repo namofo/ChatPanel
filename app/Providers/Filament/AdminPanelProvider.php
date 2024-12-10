@@ -80,11 +80,11 @@ class AdminPanelProvider extends PanelProvider
             ->tenantMenu(fn() => Auth::check() && Auth::user()->hasRole('super_admin'))//oculta el slug
         
             ## PARA AGREGAR UN LINK AL MENU
-            ->navigationItems([
-             \Filament\Navigation\NavigationItem::make('Nuevo Cliente')
-            ->url('/admin/new')
-            ->icon('heroicon-o-user-plus')
-            ->visible(fn(): bool => auth()->user()->can('super_admin')) ])
+            //->navigationItems([
+              //  \Filament\Navigation\NavigationItem::make('Nuevo Cliente')
+                //->url('/admin/new')
+                //->icon('heroicon-o-user-plus')
+                //->visible(fn(): bool => auth()->user()->can('super_admin')) ]);    
                 
             ->brandLogo(asset('/logo.svg'))
             ->favicon(asset('/favicon.ico'))
