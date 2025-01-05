@@ -1,36 +1,38 @@
-# Etapa 1: Construcción
-FROM composer:2.6 AS build
-WORKDIR /var/www/html
-
-# Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y \
-    libzip-dev unzip git curl && \
-    docker-php-ext-install zip pdo_mysql
-
-# Instalar dependencias de PHP
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
-# Copiar el proyecto al contenedor
-COPY . .
-
-# Instalar Filament Shield y configurar Laravel
-RUN php artisan shield:install --fresh
-RUN php artisan optimize:clear
-
-# Etapa 2: Producción
+# Dockerfile
 FROM php:8.2-fpm
-WORKDIR /var/www/html
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
-    libzip-dev unzip git curl && \
-    docker-php-ext-install zip pdo_mysql
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    npm
 
-# Copiar archivos desde la etapa de construcción
-COPY --from=build /var/www/html /var/www/html
+# Instalar extensiones PHP
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Configuración del contenedor
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Establecer directorio de trabajo
+WORKDIR /var/www
+
+# Copiar archivos del proyecto
+COPY . /var/www
+
+# Instalar dependencias
+RUN composer install --no-interaction --no-dev --optimize-autoloader
+RUN npm install && npm run build
+
+# Configurar permisos
+RUN chmod -R 777 storage bootstrap/cache
+
+# Exponer puerto
 EXPOSE 8000
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
 
+# Iniciar servidor
+CMD php artisan serve --host=0.0.0.0 --port=8000
