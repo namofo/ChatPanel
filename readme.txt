@@ -1,0 +1,1 @@
+Este proyecto creado con laravel filamentphp con sistema de roles y permisos funciona bien en local y en cpanel pero no lo pude hacer funcionar en railway estaba listo para funcionar con el chatbot antiguo
