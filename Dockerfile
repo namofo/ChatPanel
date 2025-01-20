@@ -20,8 +20,21 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Configurar Apache
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Configurar virtual host de Apache
+RUN { \
+    echo '<VirtualHost *:80>'; \
+    echo '  DocumentRoot ${APACHE_DOCUMENT_ROOT}'; \
+    echo '  DirectoryIndex index.php'; \
+    echo '  <Directory ${APACHE_DOCUMENT_ROOT}>'; \
+    echo '    Options Indexes FollowSymLinks'; \
+    echo '    AllowOverride All'; \
+    echo '    Require all granted'; \
+    echo '  </Directory>'; \
+    echo '  ErrorLog ${APACHE_LOG_DIR}/error.log'; \
+    echo '  CustomLog ${APACHE_LOG_DIR}/access.log combined'; \
+    echo '</VirtualHost>'; \
+} > /etc/apache2/sites-available/000-default.conf
 
 # Configurar ServerName
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf

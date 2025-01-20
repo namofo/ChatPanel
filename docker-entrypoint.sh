@@ -26,23 +26,30 @@ php artisan migrate:fresh --force --seed
 
 # Crear enlaces simbólicos de storage
 echo "Creating storage link..."
-php artisan storage:link
+php artisan storage:link || true
 
-# Instalar Filament Shield
+# Instalar Filament Shield de forma no interactiva
 echo "Installing Filament Shield..."
-php artisan shield:install --fresh
+php artisan shield:install --fresh --no-interaction
 
 # Crear superadmin si no existe
 echo "Setting up admin user..."
 php artisan tinker --execute="
-if (! \App\Models\User::where('email', 'admin@example.com')->exists()) {
-    \$user = \App\Models\User::create([
-        'name' => 'Super Admin',
-        'email' => 'admin@example.com',
-        'password' => bcrypt('password123'),
-        'email_verified_at' => now()
-    ]);
-    \$user->assignRole('super_admin');
+try {
+    if (! \App\Models\User::where('email', 'admin@example.com')->exists()) {
+        \$user = \App\Models\User::create([
+            'name' => 'Super Admin',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+            'email_verified_at' => now()
+        ]);
+        \$user->assignRole('super_admin');
+        echo 'Admin user created successfully\n';
+    } else {
+        echo 'Admin user already exists\n';
+    }
+} catch (\Exception \$e) {
+    echo 'Error creating admin user: ' . \$e->getMessage() . '\n';
 }"
 
 # Limpiar y optimizar después de toda la configuración
@@ -54,5 +61,10 @@ php artisan optimize
 
 echo "Application setup completed"
 
-# Iniciar Apache
-apache2-foreground
+# Verificar permisos una última vez
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Iniciar Apache con el módulo rewrite habilitado
+echo "Starting Apache..."
+exec apache2-foreground
