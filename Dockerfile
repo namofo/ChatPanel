@@ -56,16 +56,6 @@ RUN chown -R www-data:www-data /var/www/html && \
     find /var/www/html -type d -exec chmod 755 {} \; && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Generar key de la aplicación
-RUN php artisan key:generate
-
-# Limpiar y optimizar
-RUN php artisan config:clear && \
-    php artisan cache:clear && \
-    php artisan route:clear && \
-    php artisan view:clear && \
-    php artisan optimize
-
 # Script de inicio
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
