@@ -22,7 +22,12 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
-RUN a2enmod rewrite
+
+# Configurar ServerName
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Habilitar módulos de Apache necesarios
+RUN a2enmod rewrite headers
 
 # Establecer directorio de trabajo
 WORKDIR /var/www/html
@@ -45,11 +50,21 @@ RUN if [ -f ".env.example" ]; then \
 # Instalar dependencias
 RUN composer install --no-interaction --no-dev --optimize-autoloader
 
+# Configurar permisos
+RUN chown -R www-data:www-data /var/www/html && \
+    find /var/www/html -type f -exec chmod 644 {} \; && \
+    find /var/www/html -type d -exec chmod 755 {} \; && \
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
 # Generar key de la aplicación
 RUN php artisan key:generate
 
-# Configurar permisos
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Limpiar y optimizar
+RUN php artisan config:clear && \
+    php artisan cache:clear && \
+    php artisan route:clear && \
+    php artisan view:clear && \
+    php artisan optimize
 
 # Script de inicio
 COPY docker-entrypoint.sh /usr/local/bin/
