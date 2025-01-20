@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libzip-dev \
-    libicu-dev
+    libicu-dev \
+    net-tools
 
 # Configurar e instalar extensiones PHP
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
@@ -82,7 +83,8 @@ RUN if [ -f ".env.example" ]; then \
     fi
 
 # Instalar dependencias
-RUN composer install --no-interaction --no-dev --optimize-autoloader
+RUN composer install --no-interaction --no-dev --optimize-autoloader && \
+    composer require fakerphp/faker
 
 # Configurar permisos
 RUN chown -R www-data:www-data /var/www/html && \

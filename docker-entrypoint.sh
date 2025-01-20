@@ -24,13 +24,6 @@ if [ -z "$(grep '^APP_KEY=' .env)" ] || [ "$(grep '^APP_KEY=' .env | cut -d'=' -
     php artisan key:generate --force
 fi
 
-# Limpiar configuración inicial
-log "Clearing initial configuration..."
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
-php artisan cache:clear
-
 # Esperar a que MySQL esté disponible
 log "Waiting for database connection..."
 max_tries=30
@@ -49,6 +42,13 @@ log "Database connection established"
 # Ejecutar migraciones en orden
 log "Running migrations..."
 php artisan migrate:fresh --force --seed
+
+# Limpiar configuración inicial
+log "Clearing initial configuration..."
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan cache:clear
 
 # Crear enlaces simbólicos de storage
 log "Creating storage link..."
@@ -101,6 +101,6 @@ chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 log "Application setup completed"
 
-# Iniciar Apache con logging detallado
+# Iniciar Apache en primer plano
 log "Starting Apache..."
 exec apache2-foreground
