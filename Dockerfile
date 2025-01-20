@@ -18,12 +18,12 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
 
 # Configurar PHP
 RUN { \
-    echo 'display_errors = On'; \
-    echo 'display_startup_errors = On'; \
+    echo 'display_errors = Off'; \
+    echo 'display_startup_errors = Off'; \
     echo 'error_reporting = E_ALL'; \
     echo 'log_errors = On'; \
     echo 'error_log = /dev/stderr'; \
-    echo 'memory_limit = 256M'; \
+    echo 'memory_limit = 512M'; \
     echo 'post_max_size = 50M'; \
     echo 'upload_max_filesize = 50M'; \
 } > /usr/local/etc/php/conf.d/custom.ini
@@ -33,6 +33,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Configurar Apache
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # Configurar virtual host de Apache
 RUN { \
@@ -42,7 +44,6 @@ RUN { \
     echo '  DirectoryIndex index.php index.html'; \
     echo '  ErrorLog ${APACHE_LOG_DIR}/error.log'; \
     echo '  CustomLog ${APACHE_LOG_DIR}/access.log combined'; \
-    echo '  LogLevel debug'; \
     echo '  <Directory ${APACHE_DOCUMENT_ROOT}>'; \
     echo '    Options Indexes FollowSymLinks'; \
     echo '    AllowOverride All'; \
@@ -57,9 +58,6 @@ RUN { \
     echo '</VirtualHost>'; \
 } > /etc/apache2/sites-available/000-default.conf
 
-# Configurar ServerName
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
-
 # Habilitar módulos de Apache necesarios
 RUN a2enmod rewrite headers
 
@@ -69,22 +67,8 @@ WORKDIR /var/www/html
 # Copiar archivos del proyecto
 COPY . .
 
-# Crear archivo .env desde .env.example si existe, o crear uno nuevo
-RUN if [ -f ".env.example" ]; then \
-        cp .env.example .env; \
-    else \
-        touch .env && \
-        echo "APP_NAME=Laravel" >> .env && \
-        echo "APP_ENV=production" >> .env && \
-        echo "APP_DEBUG=true" >> .env && \
-        echo "APP_URL=http://localhost" >> .env && \
-        echo "LOG_LEVEL=debug" >> .env && \
-        echo "DB_CONNECTION=mysql" >> .env; \
-    fi
-
-# Instalar dependencias
-RUN composer install --no-interaction --no-dev --optimize-autoloader && \
-    composer require fakerphp/faker
+# Instalar dependencias de Composer
+RUN composer install --no-dev --optimize-autoloader
 
 # Configurar permisos
 RUN chown -R www-data:www-data /var/www/html && \
@@ -95,5 +79,11 @@ RUN chown -R www-data:www-data /var/www/html && \
 # Script de inicio
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Puerto por defecto para Railway
+ENV PORT=80
+
+# Exponer el puerto
+EXPOSE ${PORT}
 
 ENTRYPOINT ["docker-entrypoint.sh"]

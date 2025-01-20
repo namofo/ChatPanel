@@ -19,7 +19,9 @@ use Illuminate\Support\Collection;
 class User extends Authenticatable implements FilamentUser, HasTenants
 {
     use HasFactory, Notifiable;
-    use HasRoles;
+    use HasRoles {
+        hasRole as protected traitHasRole;
+    }
     use HasPanelShield;
 
     /**
@@ -31,6 +33,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         'name',
         'email',
         'password',
+        'team_id',
     ];
 
     /**
@@ -55,24 +58,51 @@ class User extends Authenticatable implements FilamentUser, HasTenants
             'password' => 'hashed',
         ];
     }
-    public function teams(): BelongsToMany
+
+    public function canAccessPanel(Panel $panel): bool
     {
-        return $this->belongsToMany(Team::class);
-    }
- 
-    public function getTenants(Panel $panel): Collection
-    {
-        return $this->teams;
-    }
- 
-    public function canAccessTenant(Model $tenant): bool
-    {
-        return $this->teams()->whereKey($tenant)->exists();
+        return true;
     }
 
-    public function team(): BelongsTo
+    public function team()
     {
         return $this->belongsTo(Team::class);
     }
 
+    public function getTenants(Panel $panel): array|Collection
+    {
+        return $this->teams;
+    }
+
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class);
+    }
+
+    public function canAccessTenant(Model $tenant): bool
+    {
+        return $this->teams->contains($tenant);
+    }
+
+    public function hasRole($roles, $guard = null): bool
+    {
+        if (is_string($roles) && false !== strpos($roles, '|')) {
+            $roles = explode('|', $roles);
+        }
+
+        if (is_string($roles)) {
+            return $this->traitHasRole($roles, $guard);
+        }
+
+        if (is_array($roles)) {
+            foreach ($roles as $role) {
+                if ($this->traitHasRole($role, $guard)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return $this->traitHasRole($roles, $guard);
+    }
 }

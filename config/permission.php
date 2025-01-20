@@ -24,7 +24,7 @@ return [
          * `Spatie\Permission\Contracts\Role` contract.
          */
 
-        'role' => Spatie\Permission\Models\Role::class,
+        'role' => App\Models\Role::class,
 
     ],
 
@@ -97,6 +97,18 @@ return [
     ],
 
     /*
+     * Teams Feature.
+     * When set to true the package implements teams using the 'team_foreign_key'.
+     * If you want the migrations to register the 'team_foreign_key', you must
+     * set this to true before doing the migration.
+     * If you already did the migration then you must make a new migration to also
+     * add 'team_foreign_key' to 'roles', 'model_has_roles', and 'model_has_permissions'
+     * (view the latest version of this package's migration file)
+     */
+
+    'teams' => true,
+
+    /*
      * When set to true, the method for checking permissions will be registered on the gate.
      * Set this to false if you want to implement custom logic for checking permissions.
      */
@@ -109,18 +121,6 @@ return [
      * NOTE: This should not be needed in most cases, but an Octane/Vapor combination benefited from it.
      */
     'register_octane_reset_listener' => false,
-
-    /*
-     * Teams Feature.
-     * When set to true the package implements teams using the 'team_foreign_key'.
-     * If you want the migrations to register the 'team_foreign_key', you must
-     * set this to true before doing the migration.
-     * If you already did the migration then you must make a new migration to also
-     * add 'team_foreign_key' to 'roles', 'model_has_roles', and 'model_has_permissions'
-     * (view the latest version of this package's migration file)
-     */
-
-    'teams' => false,
 
     /*
      * Passport Client Credentials Grant

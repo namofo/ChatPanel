@@ -2,17 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Team extends Model
 {
     use HasFactory;
+    
     protected $fillable = ['name', 'slug'];
 
-    
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class);
+    }
+
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class);
+    }
+
+    public function roles(): HasMany
+    {
+        return $this->hasMany(Role::class);
+    }
+
     public function apikeys(): HasMany
     {
         return $this->hasMany(Apikey::class);
@@ -51,25 +66,5 @@ class Team extends Model
     public function welcomes(): HasMany
     {
         return $this->hasMany(Welcome::class);
-    }
-
-    public function users(): HasMany
-    {
-        return $this->hasMany(User::class);
-    }
-
-    public function teams(): HasMany
-    {
-        return $this->hasMany(Team::class);
-    }
-
-    public function roles(): HasMany
-    {
-        return $this->hasMany(Role::class);
-    }
-
-    public function members(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class);
     }
 }
