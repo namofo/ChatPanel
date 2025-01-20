@@ -15,6 +15,18 @@ RUN apt-get update && apt-get install -y \
 # Configurar e instalar extensiones PHP
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
 
+# Configurar PHP
+RUN { \
+    echo 'display_errors = On'; \
+    echo 'display_startup_errors = On'; \
+    echo 'error_reporting = E_ALL'; \
+    echo 'log_errors = On'; \
+    echo 'error_log = /dev/stderr'; \
+    echo 'memory_limit = 256M'; \
+    echo 'post_max_size = 50M'; \
+    echo 'upload_max_filesize = 50M'; \
+} > /usr/local/etc/php/conf.d/custom.ini
+
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -24,15 +36,23 @@ ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 # Configurar virtual host de Apache
 RUN { \
     echo '<VirtualHost *:80>'; \
+    echo '  ServerAdmin webmaster@localhost'; \
     echo '  DocumentRoot ${APACHE_DOCUMENT_ROOT}'; \
-    echo '  DirectoryIndex index.php'; \
+    echo '  DirectoryIndex index.php index.html'; \
+    echo '  ErrorLog ${APACHE_LOG_DIR}/error.log'; \
+    echo '  CustomLog ${APACHE_LOG_DIR}/access.log combined'; \
+    echo '  LogLevel debug'; \
     echo '  <Directory ${APACHE_DOCUMENT_ROOT}>'; \
     echo '    Options Indexes FollowSymLinks'; \
     echo '    AllowOverride All'; \
     echo '    Require all granted'; \
+    echo '    <IfModule mod_rewrite.c>'; \
+    echo '      RewriteEngine On'; \
+    echo '      RewriteCond %{REQUEST_FILENAME} !-d'; \
+    echo '      RewriteCond %{REQUEST_FILENAME} !-f'; \
+    echo '      RewriteRule ^ index.php [L]'; \
+    echo '    </IfModule>'; \
     echo '  </Directory>'; \
-    echo '  ErrorLog ${APACHE_LOG_DIR}/error.log'; \
-    echo '  CustomLog ${APACHE_LOG_DIR}/access.log combined'; \
     echo '</VirtualHost>'; \
 } > /etc/apache2/sites-available/000-default.conf
 
@@ -55,8 +75,9 @@ RUN if [ -f ".env.example" ]; then \
         touch .env && \
         echo "APP_NAME=Laravel" >> .env && \
         echo "APP_ENV=production" >> .env && \
-        echo "APP_DEBUG=false" >> .env && \
+        echo "APP_DEBUG=true" >> .env && \
         echo "APP_URL=http://localhost" >> .env && \
+        echo "LOG_LEVEL=debug" >> .env && \
         echo "DB_CONNECTION=mysql" >> .env; \
     fi
 
