@@ -9,10 +9,11 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    libzip-dev
+    libzip-dev \
+    libicu-dev
 
 # Configurar e instalar extensiones PHP
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -28,6 +29,18 @@ WORKDIR /var/www/html
 
 # Copiar archivos del proyecto
 COPY . .
+
+# Crear archivo .env desde .env.example si existe, o crear uno nuevo
+RUN if [ -f ".env.example" ]; then \
+        cp .env.example .env; \
+    else \
+        touch .env && \
+        echo "APP_NAME=Laravel" >> .env && \
+        echo "APP_ENV=production" >> .env && \
+        echo "APP_DEBUG=false" >> .env && \
+        echo "APP_URL=http://localhost" >> .env && \
+        echo "DB_CONNECTION=mysql" >> .env; \
+    fi
 
 # Instalar dependencias
 RUN composer install --no-interaction --no-dev --optimize-autoloader
